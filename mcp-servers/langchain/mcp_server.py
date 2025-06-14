@@ -1,6 +1,19 @@
 import sys, json, asyncio, logging, traceback
 from typing import Dict, Any
 
+# Configure all logging to go to stderr
+for h in logging.root.handlers[:]:
+    logging.root.removeHandler(h)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(message)s",
+    stream=sys.stderr
+)
+
+# Silence verbose HTTPX debug logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 # Force unbuffered Python output
 import os
 os.environ["PYTHONUNBUFFERED"] = "1"
@@ -22,9 +35,7 @@ class JsonRpcError(Exception):
         self.data = data
         super().__init__(message)
 
-# Configure logging to stderr only
-handler = logging.StreamHandler(sys.stderr)
-logging.basicConfig(level=logging.INFO, handlers=[handler])
+# Get logger for this module
 logger = logging.getLogger(__name__)
 
 # Set Windows-specific event loop policy
@@ -223,10 +234,6 @@ if sys.platform != "win32":
     signal.signal(signal.SIGQUIT, handle_signal)
 
 if __name__ == "__main__":
-    # send all logs to stderr
-    handler = logging.StreamHandler(sys.stderr)
-    logging.basicConfig(level=logging.INFO, handlers=[handler])
-
     # Set up binary mode for stdin/stdout on Windows
     if sys.platform == "win32":
         import msvcrt
