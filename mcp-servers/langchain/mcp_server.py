@@ -1,18 +1,27 @@
-import sys, json, asyncio, logging, traceback
-from typing import Dict, Any
+import logging, sys
 
-# Configure all logging to go to stderr
+# 1) Clear any default handlers
 for h in logging.root.handlers[:]:
     logging.root.removeHandler(h)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s:%(name)s:%(message)s",
-    stream=sys.stderr
+
+# 2) Create a stderr-only handler
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.INFO)
+stderr_handler.setFormatter(
+    logging.Formatter("%(levelname)s:%(name)s:%(message)s")
 )
 
-# Silence verbose HTTPX debug logs
+# 3) Attach it to the root logger
+logging.root.addHandler(stderr_handler)
+logging.root.setLevel(logging.INFO)
+
+# 4) Optionally suppress httpx/httpcore DEBUG noise
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+# Now import everything else
+import json, asyncio, traceback
+from typing import Dict, Any
 
 # Force unbuffered Python output
 import os
